@@ -37,6 +37,7 @@ class XlsAction {
     for(let i=0;i<result.length;i++) {
       let item=result[i];
       data.push({
+        "商品名": item.product_name.trim(),
         "收件人": item.username.trim(),
         "物流公司": item.kuaidi.trim(),
         "运单号": item.order_sn.trim(),

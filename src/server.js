@@ -9,10 +9,9 @@
 
 import path from 'path';
 import express from 'express';
+import multer from 'multer';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
-import expressJwt, { UnauthorizedError as Jwt401Error } from 'express-jwt';
-import jwt from 'jsonwebtoken';
 import nodeFetch from 'node-fetch';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
@@ -32,6 +31,9 @@ import configureStore from './store/configureStore';
 import config from './config';
 import HomeController from "./controllers";
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
 process.on('unhandledRejection', (reason, p) => {
   console.error('Unhandled Rejection at:', p, 'reason:', reason);
   // send entire app down. Process manager will restart it
@@ -61,29 +63,14 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 app.use(bodyParser.json({limit: '10mb'}));
 
-app.post("/api/xls", HomeController.xls);
-app.post("/api/search", HomeController.search);
-
-//
-// Authentication
-// -----------------------------------------------------------------------------
-app.use(
-  expressJwt({
-    secret: config.auth.jwt.secret,
-    credentialsRequired: false,
-    getToken: req => req.cookies.id_token,
-  }),
+app.post(
+  '/api/xls',
+  upload.fields([
+    { name: 'file', maxCount: 1 },
+  ]),
+  HomeController.xls,
 );
-// Error handler for express-jwt
-app.use((err, req, res, next) => {
-  // eslint-disable-line no-unused-vars
-  if (err instanceof Jwt401Error) {
-    console.error('[express-jwt-error]', req.cookies.id_token);
-    // `clearCookie`, otherwise user can't use web-app until cookie expires
-    res.clearCookie('id_token');
-  }
-  next(err);
-});
+app.post("/api/search", HomeController.search);
 
 
 //

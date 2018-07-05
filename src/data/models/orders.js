@@ -7,6 +7,7 @@ const OrderSchema = mongoose.Schema({
   username: String,
   kuaidi:  String,
   order_sn: String,
+  product_name: String,
 });
 
 OrderSchema.methods.Search = ()=>{

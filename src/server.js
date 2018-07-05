@@ -207,7 +207,7 @@ app.use((err, req, res, next) => {
 // const promise = models.sync().catch(err => console.error(err.stack));
 if (!module.hot) {
   app.listen(config.port, () => {
-    console.info(`The server is running at http://${config.api.clientUrl}:${config.port}/`);
+    console.info(`The server is running at ${config.api.clientUrl}:${config.port}/`);
   });
 }
 

@@ -37,9 +37,9 @@ class XlsAction {
     for(let i=0;i<result.length;i++) {
       let item=result[i];
       data.push({
-        "收件人": item.username,
-        "物流公司": item.kuaidi,
-        "运单号": item.order_sn,
+        "收件人": item.username.trim(),
+        "物流公司": item.kuaidi.trim(),
+        "运单号": item.order_sn.trim(),
       });
     }
     dispatch({type: XLS_RESULT, payload:{data}});

@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
+import XLSX from "xlsx";
 import OrderSchema from "../data/models/orders";
 import * as Errors from './errors_constant';
 import WE from './exception';
+const X = XLSX;
 const Orders = mongoose.model('Orders', OrderSchema);
 
 if (!Object.values) {
@@ -57,42 +59,35 @@ const tryErrors = function tryErrors(req, res, fn) {
   }
 };
 
-function parseItem(data) {
-  for(let i=0;i<data.length;i++) {
-    let item = data[i];
-    if(item==="运单号" || item==="物流公司" || item==="收件人") {
-      return null;
-    }
-
-
-  }
-}
-function parse(data) {
+function parse(product_name, data) {
   const result = [];
   let username=null,order_sn=null,kuaidi=null;
-  for (let i=0;i<data.length;i++) {
-    let item = null, row = data[i], skip=false;
-    for(let j=0;i===0&&j<row.length;j++) {
-      let t = row[j];
-      if(t === "收件人" || t==="收件人姓名") {
-        username = j; skip=true;
-      } else if(t==="运单号") {
-        order_sn = j; skip=true;
-      } else if(t==="物流公司" || t==="快递公司") {
-        kuaidi = j; skip=true;
-      }
+  const header = data.shift();
+  for(let i=0;i<header.length;i++) {
+    let t = header[i];
+    if(t === "收件人" || t==="收件人姓名") {
+      username = i;
+    } else if(t==="运单号" || t==="快递单号") {
+      order_sn = i;
+    } else if(t==="物流公司" || t==="快递公司") {
+      kuaidi = i;
     }
-    if(username===null || order_sn===null || kuaidi===null) {
-      throw new WE(Errors.NO_XLS_HEADER);
-    }
-    if(skip) continue
+  }
 
+  if(username===null || order_sn===null) {
+    throw new WE(Errors.NO_XLS_HEADER);
+  }
+
+  for (let i=0;i<data.length;i++) {
+    let item = null, row = data[i];
     item = {
-      username: row[username],
-      order_sn: row[order_sn],
-      kuaidi:   row[kuaidi],
+      product_name,
+      username: row[username].trim(),
+      order_sn: row[order_sn].trim(),
+      kuaidi:   kuaidi!==null ? row[kuaidi] : "",
     };
     if(!item) continue;
+    if(/\d+/.test(item.username)) continue;
     result.push(item);
   }
 
@@ -100,21 +95,36 @@ function parse(data) {
 }
 function HomeController() { }
 
+// {
+//   file:[ {
+//     fieldname: 'file',
+//     originalname: '黄桃单号全.xlsx',
+//     encoding: '7bit',
+//     mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//     buffer: <Buffer ... >,
+//     size: 197268
+//   },
+// ]}
 HomeController.xls = (req, res)=>{
   tryErrors(req, res, async () => {
-    let raw = req.body.xls;
-    if(raw === "") {
-      log("xls is empty");
-      throw new WE(Errors.XLS_EMPTY);
-    }
+    const file = req.files.file[0];
+    const buf = file.buffer;
+    const filename = file.originalname;
+    const product_name = req.body['product_name'];
+    let workbook = X.read(buf, {type: 'buffer'});
+    let raw = {};
+    workbook.SheetNames.forEach(function(sheetName) {
+      let roa = X.utils.sheet_to_json(workbook.Sheets[sheetName], {header:1});
+      if(roa.length) raw[sheetName] = roa;
+    });
 
-    raw = JSON.parse(raw);
+    // console.log(raw);
     raw = Object.keys(raw).map(function(key) {
       return raw[key];
     });
-    const input = parse(raw[0] || []);
+    const input = parse(product_name, raw[0] || []);
     await Orders.insertMany(input);
-
+    console.log(input[0]);
 
     return res.json({info: 'success', status: 10000, data: input});
   });

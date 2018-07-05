@@ -12,70 +12,141 @@ import PropTypes from 'prop-types';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
 import {ControlLabel, Form, FormControl, FormGroup} from "react-bootstrap";
 import {connect} from "react-redux";
-import XLSX from 'xlsx';
+import FileUploadProgress  from 'react-fileupload-progress';
 
 import s from './Upload.css';
-import {XLS} from '../../actions';
 
-let X = XLSX;
+const styles = {
+  progressWrapper: {
+    height: '50px',
+    marginTop: '10px',
+    width: '400px',
+    float:'left',
+    overflow: 'hidden',
+    backgroundColor: '#f5f5f5',
+    borderRadius: '4px',
+    WebkitBoxShadow: 'inset 0 1px 2px rgba(0,0,0,.1)',
+    boxShadow: 'inset 0 1px 2px rgba(0,0,0,.1)'
+  },
+  progressBar: {
+    float: 'left',
+    width: '0',
+    height: '100%',
+    fontSize: '12px',
+    lineHeight: '20px',
+    color: '#fff',
+    textAlign: 'center',
+    backgroundColor: '#5cb85c',
+    WebkitBoxShadow: 'inset 0 -1px 0 rgba(0,0,0,.15)',
+    boxShadow: 'inset 0 -1px 0 rgba(0,0,0,.15)',
+    WebkitTransition: 'width .6s ease',
+    Otransition: 'width .6s ease',
+    transition: 'width .6s ease'
+  },
+  cancelButton: {
+    marginTop: '5px',
+    WebkitAppearance: 'none',
+    padding: 0,
+    cursor: 'pointer',
+    background: '0 0',
+    border: 0,
+    float: 'left',
+    fontSize: '21px',
+    fontWeight: 700,
+    lineHeight: 1,
+    color: '#000',
+    textShadow: '0 1px 0 #fff',
+    filter: 'alpha(opacity=20)',
+    opacity: '.2'
+  },
+
+  bslabel: {
+    display: 'inline-block',
+    maxWidth: '100%',
+    marginBottom: '5px',
+    fontWeight: 700
+  },
+
+  bsHelp: {
+    display: 'block',
+    marginTop: '5px',
+    marginBottom: '10px',
+    color: '#737373'
+  },
+
+  bsButton: {
+    fontSize: '12px',
+    lineHeight: '1.5',
+    borderRadius: '3px',
+    color: '#fff',
+    backgroundColor: '#337ab7',
+    borderColor: '#2e6da4',
+    display: 'inline-block',
+    padding: '6px 12px',
+    marginBottom: 0,
+    fontWeight: 400,
+    textAlign: 'center',
+    whiteSpace: 'nowrap',
+    verticalAlign: 'middle',
+    touchAction: 'manipulation',
+    cursor: 'pointer',
+    WebkitUserSelect: 'none',
+    MozUserSelect: 'none',
+    msUserSelect: 'none',
+    userSelect: 'none',
+    backgroundImage: 'none',
+    border: '1px solid transparent'
+  }
+};
 class Upload extends React.Component {
   static contextTypes = {
     fetch: PropTypes.func.isRequired,
   };
-  state = {output:null}
+  state = {err:""}
   constructor(props){
     super(props)
-    this._onChange = this._onChange.bind(this)
-    this.do_file = this.do_file.bind(this)
   }
 
-  _onChange(e){
-    console.log(this);
-    let files = e.target.files;
-    if (!files || files.length === 0) return;
-    this.do_file(files);
+  submitForm(onSubmit, e){
+    const pname = document.getElementById('product_name').value;
+    if(/^$\s*/.test(pname)) {
+      return false;
+    }
+    return onSubmit(e);
   }
-  do_file(files) {
-    let f = files[0];
-    let reader = new FileReader();
-    reader.onload = (e)=>{
-      let data = e.target.result;
-      data = new Uint8Array(data);
-      this.process_wb(X.read(data, {type: 'array'}));
-    };
-    reader.readAsArrayBuffer(f);
+  formGetter(){
+    return new FormData(document.getElementById('customForm'));
   }
-  process_wb(wb) {
-    let output = this.to_json(wb)
-    this.setState({output});
-    this.props.uploadJson(this.context.fetch, output);
-  }
-  to_json(workbook) {
-    let result = {};
-    workbook.SheetNames.forEach(function(sheetName) {
-      let roa = X.utils.sheet_to_json(workbook.Sheets[sheetName], {header:1});
-      if(roa.length) result[sheetName] = roa;
-    });
-    return JSON.stringify(result, null, 2);
+  customFormRenderer(onSubmit){
+    return (
+      <form id='customForm' style={{marginBottom: '15px'}} >
+        <label style={styles.bslabel} htmlFor="product_name">商品名称</label>
+        <input style={{display: 'block'}} type="text" name='product_name' id="product_name" />
+        <label style={styles.bslabel} htmlFor="xls">xls文件</label>
+        <input style={{display: 'block', marginBottom:'0.5em'}} type="file" name='file' id="xls" />
+        <button type="button" style={styles.bsButton} onClick={this.submitForm.bind(this, onSubmit)}>Upload</button>
+      </form>
+    );
   }
 
   render() {
     return (
       <div className={s.root}>
         <div className={s.container}>
-          <Form>
-            <FormGroup controlId="file">
-              <ControlLabel><a href="/">查询订单</a></ControlLabel>
-              <FormControl
-                type="file"
-                name="file"
-                onChange={this._onChange}
-              />
-            </FormGroup>
+          <FileUploadProgress key='ex1' url='/api/xls'
+            onProgress={(e, request, progress) => {console.log('progress', e, request, progress);}}
+            onLoad={ (e, request) => {console.log('load', e, request);}}
+            onError={ (e, request) => {console.log('error', e, request);this.setState({err:e});}}
+            onAbort={ (e, request) => {console.log('abort', e, request);this.setState({err:e});}}
+            formGetter={this.formGetter.bind(this)}
+            formRenderer={this.customFormRenderer.bind(this)}
+          />
+          {
+            this.state.err &&
             <div>
-              <pre>{this.state.output}</pre>
+              <pre>{this.state.err.toString()}</pre>
             </div>
-          </Form>
+          }
         </div>
       </div>
     );

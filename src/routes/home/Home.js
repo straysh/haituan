@@ -40,7 +40,7 @@ class Home extends React.Component {
       <div className={s.root}>
         <div className={s.container}>
           <Form>
-            <FormGroup controlId="file">
+            <FormGroup controlId="file" method="POST">
               {/*<ControlLabel><a href="/upload">上传Excel</a></ControlLabel>*/}
               <FormControl
                 type="text"

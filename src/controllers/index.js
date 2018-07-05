@@ -61,32 +61,41 @@ const tryErrors = function tryErrors(req, res, fn) {
 
 function parse(product_name, data) {
   const result = [];
-  let username=null,order_sn=null,kuaidi=null;
+  let username_index=null,order_sn_index=null,kuaidi_index=null;
   const header = data.shift();
   for(let i=0;i<header.length;i++) {
     let t = header[i];
     if(t === "收件人" || t==="收件人姓名") {
-      username = i;
+      username_index = i;
     } else if(t==="运单号" || t==="快递单号") {
-      order_sn = i;
+      order_sn_index = i;
     } else if(t==="物流公司" || t==="快递公司") {
-      kuaidi = i;
+      kuaidi_index = i;
     }
   }
 
-  if(username===null || order_sn===null) {
+  if(username_index===null || order_sn_index===null) {
     throw new WE(Errors.NO_XLS_HEADER);
   }
 
   for (let i=0;i<data.length;i++) {
     let item = null, row = data[i];
+    let username = row[username_index];
+    let order_sn = row[order_sn_index];
+    if(!username || !order_sn || /^$[a-zA-Z0-9]+/.test()) continue;
     item = {
       product_name,
-      username: row[username].trim(),
-      order_sn: row[order_sn].trim(),
-      kuaidi:   kuaidi!==null ? row[kuaidi] : "",
+      username: username.trim(),
+      order_sn: order_sn.trim(),
+      kuaidi:   kuaidi_index!==null ? row[kuaidi_index] : "",
     };
-    if(!item) continue;
+    if(!item.username || !item.order_sn) {
+      console.log(i);
+      console.log(item);
+      console.log(data[i]);
+      process.exit(1);
+    }
+    if(!item || item.order_sn==="") continue;
     if(/\d+/.test(item.username)) continue;
     result.push(item);
   }
@@ -123,10 +132,16 @@ HomeController.xls = (req, res)=>{
       return raw[key];
     });
     const input = parse(product_name, raw[0] || []);
-    await Orders.insertMany(input);
     console.log(input[0]);
 
-    return res.json({info: 'success', status: 10000, data: input});
+    // let bulk = Orders.collection.initializeUnorderedBulkOp();
+    // for(let i=0;i<input.length;i++) {
+    //   bulk.insert(input[i]);
+    // }
+    // await bulk.execute();
+    await Orders.insertMany(input, {ordered: false}, ()=>{
+      return res.json({info: 'success', status: 10000, data: input});
+    });
   });
 
 }

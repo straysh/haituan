@@ -7,3 +7,4 @@ export const SET_TOKEN_LISTS = "SET_TOKEN_LISTS";
 export const SET_TX_LISTS = "SET_TX_LISTS";
 export const SET_TOKEN_NEW = "SET_TOKEN_NEW";
 export const XLS_RESULT = "XLS_RESULT";
+export const XLS_UPLOADING = "XLS_UPLOADING_START";

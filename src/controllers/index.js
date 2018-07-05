@@ -140,7 +140,7 @@ HomeController.xls = (req, res)=>{
     // }
     // await bulk.execute();
     await Orders.insertMany(input, {ordered: false}, ()=>{
-      return res.json({info: 'success', status: 10000, data: input});
+      return res.json({info: 'success', status: 10000, data: "ok"});
     });
   });
 

@@ -121,7 +121,7 @@ class Upload extends React.Component {
   }
   onProgress(e, request, progress) {
     if(progress>=100) {
-      // this.props.hideLoading();
+      this.props.hideLoading();
     }
   }
   formGetter(){

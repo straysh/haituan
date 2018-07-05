@@ -6,7 +6,7 @@ db.on('error', console.error.bind(console, 'connection error:'));
 const OrderSchema = mongoose.Schema({
   username: String,
   kuaidi:  String,
-  order_sn: { type: String, index: { unique: true } },
+  order_sn: String,
 });
 
 OrderSchema.methods.Search = ()=>{

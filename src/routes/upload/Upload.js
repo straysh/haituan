@@ -10,11 +10,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
-import {ControlLabel, Form, FormControl, FormGroup} from "react-bootstrap";
 import {connect} from "react-redux";
 import FileUploadProgress  from 'react-fileupload-progress';
 
 import s from './Upload.css';
+import Loader from "./loader";
+import {XLS} from '../../actions';
 
 const styles = {
   progressWrapper: {
@@ -108,12 +109,20 @@ class Upload extends React.Component {
     super(props)
   }
 
-  submitForm(onSubmit, e){
+  async submitForm(onSubmit, e){
     const pname = document.getElementById('product_name').value;
     if(/^$\s*/.test(pname)) {
       return false;
     }
+
+    this.props.showLoading();
+
     return onSubmit(e);
+  }
+  onProgress(e, request, progress) {
+    if(progress>=100) {
+      // this.props.hideLoading();
+    }
   }
   formGetter(){
     return new FormData(document.getElementById('customForm'));
@@ -162,11 +171,12 @@ class Upload extends React.Component {
   }
 
   render() {
+    const {xls} = this.props;
     return (
       <div className={s.root}>
         <div className={s.container}>
           <FileUploadProgress key='ex1' url='/api/xls'
-            onProgress={(e, request, progress) => {console.log('progress', e, request, progress);}}
+            onProgress={this.onProgress.bind(this)}
             onLoad={ (e, request) => {console.log('load', e, request);}}
             onError={ (e, request) => {console.log('error', e, request);this.setState({err:e});}}
             onAbort={ (e, request) => {console.log('abort', e, request);this.setState({err:e});}}
@@ -180,6 +190,9 @@ class Upload extends React.Component {
               <pre>{this.state.err.toString()}</pre>
             </div>
           }
+          {
+            xls.isLoading ? <Loader/> : null
+          }
         </div>
       </div>
     );
@@ -192,8 +205,11 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => {
   return {
-    uploadJson: (...args)=>{
-      dispatch(XLS.uploadJson(...args))
+    showLoading: (...args)=>{
+      dispatch(XLS.showLoading(...args))
+    },
+    hideLoading: (...args)=>{
+      dispatch(XLS.hideLoading(...args))
     },
   };
 };

@@ -1,22 +1,14 @@
 /* eslint-disable import/prefer-default-export */
-import { XLS_RESULT } from '../constants';
+import { XLS_RESULT, XLS_UPLOADING } from '../constants';
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 class XlsAction {
 
-  uploadJson = (fetch, data)=> async (dispatch, getState) =>{
-    const text = await fetch("/api/xls", {
-      credentials: 'same-origin',
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify({xls: data}),
-    });
-
-    const result = await text.json();
+  showLoading = ()=>async(dispatch) => {
+    dispatch({type: XLS_UPLOADING, payload:{isLoading: true}});
+  }
+  hideLoading = ()=>async(dispatch) => {
+    dispatch({type: XLS_UPLOADING, payload:{isLoading: false}});
   }
 
   searchOrder = (fetch, q)=> async (dispatch, getState) => {

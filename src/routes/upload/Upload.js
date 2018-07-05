@@ -18,9 +18,9 @@ import s from './Upload.css';
 
 const styles = {
   progressWrapper: {
-    height: '50px',
+    height: '1em',
     marginTop: '10px',
-    width: '90%',
+    width: '25em',
     float:'left',
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',
@@ -95,7 +95,8 @@ const styles = {
     msUserSelect: 'none',
     userSelect: 'none',
     backgroundImage: 'none',
-    border: '1px solid transparent'
+    border: '1px solid transparent',
+    width: '90%',
   }
 };
 class Upload extends React.Component {
@@ -128,6 +129,37 @@ class Upload extends React.Component {
       </form>
     );
   }
+  customProgressRenderer(progress, hasError, cancelHandler) {
+    if (hasError || progress > -1 ) {
+      let barStyle = Object.assign({}, styles.progressBar);
+      barStyle.width = progress + '%';
+
+      let message = (<span>{barStyle.width}</span>);
+      if (hasError) {
+        barStyle.backgroundColor = '#d9534f';
+        message = (<span style={{'color': '#a94442'}}>Failed to upload ...</span>);
+      }
+      if (progress === 100){
+        message = (<span >Done</span>);
+      }
+
+      return (
+        <div>
+          <div style={styles.progressWrapper}>
+            <div style={barStyle}></div>
+          </div>
+          <button style={styles.cancelButton} onClick={cancelHandler}>
+            <span>&times;</span>
+          </button>
+          <div style={{'clear':'left'}}>
+            {message}
+          </div>
+        </div>
+      );
+    } else {
+      return;
+    }
+  }
 
   render() {
     return (
@@ -140,6 +172,7 @@ class Upload extends React.Component {
             onAbort={ (e, request) => {console.log('abort', e, request);this.setState({err:e});}}
             formGetter={this.formGetter.bind(this)}
             formRenderer={this.customFormRenderer.bind(this)}
+            progressRenderer={this.customProgressRenderer.bind(this)}
           />
           {
             this.state.err &&

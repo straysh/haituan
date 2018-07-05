@@ -128,7 +128,7 @@ HomeController.search = (req, res) => {
       throw new WE(Errors.EMPTY_SEARCH);
     }
 
-    let data = await Orders.find({$or:[{username:q}, {order_sn:q}]});
+    let data = await Orders.find({$or:[{username:q}, {order_sn:q}]}).sort({"_id":-1});
     res.json({status:10000,info:"success", data})
   })
 };

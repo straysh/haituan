@@ -41,7 +41,7 @@ class Home extends React.Component {
         <div className={s.container}>
           <Form>
             <FormGroup controlId="file">
-              <ControlLabel><a href="/upload">上传Excel</a></ControlLabel>
+              {/*<ControlLabel><a href="/upload">上传Excel</a></ControlLabel>*/}
               <FormControl
                 type="text"
                 name="q"

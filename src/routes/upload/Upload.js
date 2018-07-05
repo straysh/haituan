@@ -21,7 +21,7 @@ const styles = {
   progressWrapper: {
     height: '1em',
     marginTop: '10px',
-    width: '25em',
+    width: '90%',
     float:'left',
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',

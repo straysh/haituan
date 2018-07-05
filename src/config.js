@@ -15,7 +15,7 @@ if (process.env.BROWSER) {
   );
 }
 
-module.exports = {
+const config = {
   // Node.js app
   port: process.env.PORT || 3000,
 
@@ -69,3 +69,10 @@ module.exports = {
     },
   },
 };
+
+if (process.env.NODE_ENV === 'production') {
+  config.api.serverUrl = 'http://haituan.straysh.com';
+  config.api.clientUrl = 'http://haituan.straysh.com';
+}
+
+module.exports = config;
